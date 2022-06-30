@@ -21,6 +21,10 @@ function App() {
     message: "",
     visible: false
   });
+  // error
+  const [error, setError] = React.useState({
+    formerror: false
+  });
   // controla el modal
   const [open, setOpen] = React.useState(false);
   const [opendialog, setOpenDialog] = React.useState(false);
@@ -35,8 +39,8 @@ function App() {
   });
   // filtrar tarea
   const searchTask = (e) => {
-    console.log(e);
-    console.log(task);
+    //console.log(e);
+    //console.log(task);
     const filtertask = taskc.filter(
       (t) =>
         `${t.title}`.toLowerCase().includes(e) ||
@@ -47,14 +51,22 @@ function App() {
   // add tarea
   const addTask = async () => {
     try {
+      const validar =
+        formtask.task.trim().length > 0 && formtask.title.trim().length > 0;
+      if (!validar) {
+        setError({
+          formerror: true
+        });
+        return;
+      }
       const id = task.length !== 0 ? task[task.length - 1].id + 1 : 1;
-      console.log(id);
+      //console.log(id);
       const jsonsubmit = {
         id,
         title: formtask.title,
         task: formtask.task
       };
-      console.log(jsonsubmit);
+      //console.log(jsonsubmit);
       const { data } = await axios.post(
         "https://allan26.pythonanywhere.com/createtask",
         jsonsubmit
@@ -70,18 +82,19 @@ function App() {
           title: "",
           task: ""
         });
+        setError({
+          formerror: false
+        });
         getTask();
+        setOpen(false);
       }
     } catch (error) {
-      console.log(error);
       setMessage({
         variant: false,
         title: "Error en la operacion",
         message: "Error al agregar la tarea",
         visible: true
       });
-    } finally {
-      setOpen(false);
     }
   };
   const deleteTask = async (id) => {
@@ -108,6 +121,7 @@ function App() {
       });
     } finally {
       setOpen(false);
+      setOpenDialog(false);
     }
   };
   // peticion http
@@ -155,15 +169,18 @@ function App() {
         </Modal.Actions>
       </Modal>
       <Modal size="tiny" open={open} onClose={() => setOpen(false)}>
-        <Modal.Header>Add task</Modal.Header>
+        <Modal.Header>Nueva Tarea</Modal.Header>
         <Modal.Content>
           <Grid container>
             <Grid.Row>
               <Input
                 icon="star"
+                error={error.formerror}
                 style={{ width: "100%" }}
                 size="huge"
-                placeholder="Title..."
+                placeholder={
+                  error.formerror ? " Campo obligatorio " : "Titulo..."
+                }
                 value={formtask.title}
                 onChange={(e) => {
                   setFormtask({
@@ -176,7 +193,10 @@ function App() {
             <Grid.Row>
               <Input
                 icon="tasks icon"
-                placeholder="Task..."
+                error={error.formerror}
+                placeholder={
+                  error.formerror ? " Campo obligatorio " : "Tarea..."
+                }
                 style={{ width: "100%" }}
                 size="huge"
                 value={formtask.task}
@@ -197,7 +217,7 @@ function App() {
               addTask();
             }}
           >
-            Add task
+            Agregar Tarea
           </Button>
         </Modal.Actions>
       </Modal>
@@ -263,7 +283,7 @@ function App() {
                   description={m.task}
                   onClick={(e) => {
                     setOpenDialog(true);
-                    console.log(m.id);
+                    // console.log(m.id);
                     window.localStorage.setItem("idtask", m.id);
                   }}
                 />
